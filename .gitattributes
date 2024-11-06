@@ -1,0 +1,9 @@
+*   text=auto
+
+*.kts   text=lf
+*.json  text=lf
+*.md    text=lf
+*.java  text=lf
+
+.gitattributes  text=lf
+.gitignore  text=lf

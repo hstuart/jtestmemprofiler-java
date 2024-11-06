@@ -1,0 +1,66 @@
+name: Release
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        type: string
+        description: Version number for the release
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        jdk: [17, 21]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    name: Build ${{ matrix.os }} with JDK ${{ matrix.jdk }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      -
+        uses: actions/checkout@v4
+      -
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.jdk }}
+          architecture: x64
+      -
+        uses: gradle/actions/setup-gradle@v4
+        name: Setup gradle
+      -
+        name: Verify
+        run: ./gradlew check
+      -
+        name: Collect test results
+        uses: mikepenz/action-junit-report@v5
+        if: success() || failure()
+        with:
+          report_paths: "**/build/test-results/test/TEST-*.xml"
+          summary: "Test results for ${{ matrix.os }} with JDK ${{ matrix.jdk }}"
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      -
+        uses: actions/checkout@v4
+      -
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          architecture: x64
+      -
+        uses: gradle/actions/setup-gradle@v4
+        name: Setup gradle
+      -
+        name: Run publish
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: ./gradlew publishToCentralPortal --info
