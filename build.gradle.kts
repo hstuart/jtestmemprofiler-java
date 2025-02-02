@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "dk.stuart"
-version = "1.0.1"
+version = "1.1.0"
 
 repositories {
     mavenCentral()
@@ -29,16 +29,16 @@ dependencies {
 
     testImplementation("org.assertj:assertj-core:3.11.1")
 
-    agent("dk.stuart:jtestmemprofiler-native-agent:1.0.1") {
+    agent("dk.stuart:jtestmemprofiler-native-agent:1.1.0") {
         this.artifact {
             if (Os.isFamily(Os.FAMILY_WINDOWS)) {
                 this.classifier = "windows-x86_64-jdk${JavaVersion.current()}"
                 this.extension = "dll"
             } else if (Os.isFamily(Os.FAMILY_MAC)) {
-                this.classifier = "osx-x86_64-${JavaVersion.current()}"
+                this.classifier = "osx-x86_64-jdk${JavaVersion.current()}"
                 this.extension = "dylib"
             } else if (Os.isFamily(Os.FAMILY_UNIX)) {
-                this.classifier = "linux-x86_64-${JavaVersion.current()}"
+                this.classifier = "linux-x86_64-jdk${JavaVersion.current()}"
                 this.extension = "so"
             } else {
                 throw RuntimeException("unsupported operating system")
@@ -49,7 +49,7 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
-    jvmArgs("-agentpath:F:\\src\\profiler\\jtestmemprofiler-cpp\\build\\Release\\JTestMemProfiler.dll")
+    jvmArgs("-agentpath:${agent.singleFile}")
 }
 
 publishing {
