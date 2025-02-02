@@ -1,9 +1,9 @@
 import cn.lalaki.pub.BaseCentralPortalPlusExtension
+import org.apache.tools.ant.taskdefs.condition.Os
 import java.lang.RuntimeException
 
 plugins {
     id("java")
-    id("com.google.osdetector") version("1.7.3")
     id("maven-publish")
     signing
     id("cn.lalaki.central") version("1.2.5")
@@ -31,14 +31,17 @@ dependencies {
 
     agent("dk.stuart:jtestmemprofiler-native-agent:1.0.1") {
         this.artifact {
-            this.classifier = "${osdetector.classifier}-jdk${JavaVersion.current()}"
-            extension = when (osdetector.os) {
-                "windows" -> "dll"
-                "linux" -> "so"
-                "osx" -> "dylib"
-                else -> {
-                    throw RuntimeException("Unsupported OS ${osdetector.os}")
-                }
+            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+                this.classifier = "windows-x86_64-jdk${JavaVersion.current()}"
+                this.extension = "dll"
+            } else if (Os.isFamily(Os.FAMILY_MAC)) {
+                this.classifier = "osx-x86_64-${JavaVersion.current()}"
+                this.extension = "dylib"
+            } else if (Os.isFamily(Os.FAMILY_UNIX)) {
+                this.classifier = "linux-x86_64-${JavaVersion.current()}"
+                this.extension = "so"
+            } else {
+                throw RuntimeException("unsupported operating system")
             }
         }
     }
@@ -46,7 +49,7 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
-    jvmArgs("-agentpath:${agent.singleFile}")
+    jvmArgs("-agentpath:F:\\src\\profiler\\jtestmemprofiler-cpp\\build\\Release\\JTestMemProfiler.dll")
 }
 
 publishing {

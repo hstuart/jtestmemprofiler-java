@@ -2,6 +2,7 @@ package dk.stuart.jtestmemprofiler;
 
 import org.junit.jupiter.api.*;
 
+import java.io.StringWriter;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.*;
@@ -78,5 +79,20 @@ public class ProfilerTest {
 		assertThat(allocations).containsKeys("[B");
 		assertThat(allocations).doesNotContainKeys("[C");
 		assertThat(allocations.get("[B")).isGreaterThan(10);
+	}
+
+	@Test
+	void profile_callTreeCollector_recordsAllocations() {
+		TrieNode[] allocations = { null };
+
+		try (var ignored = new ProfilerBuilder().withThreadIdFilter(Set.of(Thread.currentThread())).withCallTreeCollector(trieNode -> allocations[0] = trieNode).build()) {
+			var ignored2 = new byte[10];
+			var ignored3 = new char[20];
+			var ignored4 = new Object[40];
+			var ignored5 = new RuntimeException("hello");
+		}
+
+		assertThat(allocations[0]).isNotNull();
+		assertThat(allocations[0].getChildAccumulatedAllocationSize()).isGreaterThan(70);
 	}
 }
