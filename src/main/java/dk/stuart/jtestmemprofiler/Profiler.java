@@ -18,17 +18,19 @@ public class Profiler implements Closeable {
 	private final NativeFilter filter;
 	private final Consumer<HashMap<String, Long>> perTypeCollectorCallback;
 	private final Consumer<Long> totalsCollectorCallback;
-	private final NativeProfiler profiler;
+    private final Consumer<TrieNode> callTreeCollectorCallback;
+    private final NativeProfiler profiler;
 	private final int sampleRate;
 	private boolean closed = false;
 
-	Profiler(NativeCollector collector, NativeFilter filter, int sampleRate, Consumer<HashMap<String, Long>> perTypeCollectorCallback, Consumer<Long> totalsCollectorCallback, boolean enableImmediately) {
+	Profiler(NativeCollector collector, NativeFilter filter, int sampleRate, Consumer<HashMap<String, Long>> perTypeCollectorCallback, Consumer<Long> totalsCollectorCallback, Consumer<TrieNode> callTreeCollectorCallback, boolean enableImmediately) {
 		this.collector = collector;
 		this.filter = filter;
 		this.sampleRate = sampleRate;
 		this.perTypeCollectorCallback = perTypeCollectorCallback;
 		this.totalsCollectorCallback = totalsCollectorCallback;
-		profiler = new NativeProfiler();
+        this.callTreeCollectorCallback = callTreeCollectorCallback;
+        profiler = new NativeProfiler();
 		profiler.doSetCollector(collector);
 		profiler.doSetFilter(filter);
 
@@ -54,6 +56,9 @@ public class Profiler implements Closeable {
 
 		if (totalsCollectorCallback != null)
 			totalsCollectorCallback.accept(((NativeTotalsCollector)collector).getAllocationTotal());
+
+		if (callTreeCollectorCallback != null)
+			callTreeCollectorCallback.accept(((NativeCallTreeCollector)collector).getAllocations());
 
 		collector.close();
 		profiler.doSetCollector(null);

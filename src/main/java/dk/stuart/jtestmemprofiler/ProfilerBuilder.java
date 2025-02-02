@@ -20,6 +20,7 @@ public class ProfilerBuilder {
 	private NativeFilter nativeFilter = null;
 	private Consumer<HashMap<String, Long>> perTypeCollectorCallback = null;
 	private Consumer<Long> totalsCollectorCallback = null;
+	private Consumer<TrieNode> callTreeCollectorCallback = null;
 	private int sampleRate = 0;
 	private boolean enableImmediately = true;
 
@@ -44,6 +45,13 @@ public class ProfilerBuilder {
 		if (nativeCollector != null) throw new IllegalStateException("Can only assign a single collector");
 		nativeCollector = new NativeTotalsCollector();
 		totalsCollectorCallback = callback;
+		return this;
+	}
+
+	public ProfilerBuilder withCallTreeCollector(Consumer<TrieNode> callback) {
+		if (nativeCollector != null) throw new IllegalStateException("Can only assign a single collector");
+		nativeCollector = new NativeCallTreeCollector();
+		callTreeCollectorCallback = callback;
 		return this;
 	}
 
@@ -94,6 +102,6 @@ public class ProfilerBuilder {
 	 * @return Profiler instance
 	 */
 	public Profiler build() {
-		return new Profiler(nativeCollector, nativeFilter, sampleRate, perTypeCollectorCallback, totalsCollectorCallback, enableImmediately);
+		return new Profiler(nativeCollector, nativeFilter, sampleRate, perTypeCollectorCallback, totalsCollectorCallback, callTreeCollectorCallback, enableImmediately);
 	}
 }
